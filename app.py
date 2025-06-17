@@ -26,24 +26,29 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # app layout and design - per row, each row contains columns
 app.layout = dbc.Container([ #starts with row, then column
-    # row 1
+    
+    # Heading
     dbc.Row([
         dbc.Col(html.H1("Healthcare Dashboard"), width=15, className='text-center my-5')
     ]),
 
-    # row 2
+    # Overview summary data
     dbc.Row([
         dbc.Col(html.Div(f"Total Patient Records: {num_records}"), width=7, className='text-center my-3 top-text'),
-        dbc.Col(html.Div(f"Average Billing Amount: {avg_billing}"), width=7, className='text-center my-3 top-text')
+        dbc.Col(html.Div(f"Average Billing Amount: {avg_billing:,.2f}"), width=7, className='text-center my-3 top-text')
     ], className='mb-5'), #styling div (margin bottom = mb)
 
+    # Patient (F/M) Demographics
     dbc.Row([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
                     html.H4(f'Patient Demographics', className='card-title'),
                     dcc.Dropdown(
-                        id="gender-filter"
+                        id="gender-filter",
+                        options=[{"label":gender, "value": gender} for gender in data['Gender'].unique()],
+                        value=None, #automatically display None
+                        placeholder="Select a Gender"
                     ),
                     dcc.Graph(id="age-distribution")
                 ])
@@ -78,7 +83,16 @@ app.layout = dbc.Container([ #starts with row, then column
             dbc.Card([
                 dbc.CardBody([
                     html.H4(f'Billing Amount Distribution', className='card-title'),
-                    dcc.Slider(id='billing-slider'),
+                    dcc.Slider(
+                        id='billing-slider',
+                        min=data['Billing Amount'].min(), #ranging from min value
+                        max=data['Billing Amount'].max(), #up to max value
+                        value=data['Billing Amount'].median(), #display starting value at the median/middle amount
+                        marks={int(value): f"${int(value):,}" for value in data['Billing Amount'].quantile([
+                            0,0.25, 0.5, 0.75, 1]).values},  #range
+                        step=100 #up to 100$
+                               
+                    ),
                     dcc.Graph(id='billing-distribution')
                 ])
             ])
@@ -91,8 +105,17 @@ app.layout = dbc.Container([ #starts with row, then column
             dbc.Card([
                 dbc.CardBody([
                     html.H4(f'Trends in Admission', className='card-title'),
-                    dcc.RadioItems(id='chart-type'),
-                    dcc.Dropdown(id='condition-filter'),
+                    dcc.RadioItems(id='chart-type', 
+                                   options=[{"label":"Line Chart", 'value': 'line'}, 
+                                            {"label": "Bar Chart", 'value': 'bar'}],
+                                    value='line',
+                                    inline='True',
+                                    className='mb-4'),
+                    dcc.Dropdown(id='condition-filter',
+                                 options=[{"label": condition, 'value': condition} for condition in data['Medical Condition'].unique()],
+                                 value=None,
+                                 placeholder="Select a Condition"),
+                                 
                     dcc.Graph(id='admission-trends')
                 ])
             ])
