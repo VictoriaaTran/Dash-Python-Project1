@@ -124,9 +124,48 @@ app.layout = dbc.Container([ #starts with row, then column
 
 ], fluid=True) 
 
+####### Create callbacks (how information are pass around and display on the graph)
+
+#age distribution based on gender roles
+@app.callback(
+    Output('age-distribution', 'figure'),
+    Input('gender-filter', 'value')
+)
+def update_distribution(selected_gender):
+    # returns selected gender if there is one else, returns the rest of the data
+    if selected_gender:
+        filtered_df = data[data['Gender'] == selected_gender]
+    else:
+        filtered_df = data
+    
+    if filtered_df.empty:
+        return {}  #returns nothing as in dictionary
+
+    # specify the figure type - histogram
+    fig = px.histogram(
+        filtered_df,
+        x="Age",
+        nbins=10,
+        color="Gender",
+        title="Age Distribution by Gender",
+        color_discrete_sequence=['blue', 'red']
+    )
+    return fig
 
 
-
+# medical condition distribution
+@app.callback(
+    Output("condition-distribution", 'figure'),
+    Input("gender-filter", 'value')
+)
+def update_medical_condition(selected_gender):
+    filtered_df = data[data['Gender'] == selected_gender] if selected_gender else data
+    fig = px.pie(
+        filtered_df,
+        names='Medical Condition',
+        title='Medical Condition Distribution Pie Chart'
+    )
+    return fig
 
 if __name__ == '__main__':
     app.run(debug=True)
