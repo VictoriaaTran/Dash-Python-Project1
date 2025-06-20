@@ -34,8 +34,8 @@ app.layout = dbc.Container([ #starts with row, then column
 
     # Overview summary data
     dbc.Row([
-        dbc.Col(html.Div(f"Total Patient Records: {num_records}"), width=7, className='text-center my-3 top-text'),
-        dbc.Col(html.Div(f"Average Billing Amount: {avg_billing:,.2f}"), width=7, className='text-center my-3 top-text')
+        dbc.Col(html.Div(f"Total Patient Records: {num_records}"), width=5, className='text-center my-3 top-text'),
+        dbc.Col(html.Div(f"Average Billing Amount: {avg_billing:,.2f}"), width=5, className='text-center my-3 top-text')
     ], className='mb-5'), #styling div (margin bottom = mb)
 
     # Patient (F/M) Demographics
@@ -53,7 +53,7 @@ app.layout = dbc.Container([ #starts with row, then column
                     dcc.Graph(id="age-distribution")
                 ])
             ])
-        ], width=7),
+        ], width=6),
 
         dbc.Col([
             dbc.Card([
@@ -62,7 +62,7 @@ app.layout = dbc.Container([ #starts with row, then column
                     dcc.Graph(id="condition-distribution")
                 ])
             ])
-        ], width=7)
+        ], width=6)
     ]),
 
     # Insurance provider data
