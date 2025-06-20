@@ -105,12 +105,13 @@ app.layout = dbc.Container([ #starts with row, then column
             dbc.Card([
                 dbc.CardBody([
                     html.H4(f'Trends in Admission', className='card-title'),
-                    dcc.RadioItems(id='chart-type', 
-                                   options=[{"label":"Line Chart", 'value': 'line'}, 
-                                            {"label": "Bar Chart", 'value': 'bar'}],
-                                    value='line',
-                                    inline='True',
-                                    className='mb-4'),
+                    dcc.RadioItems(
+                        id='chart-type',
+                        options=[{'label': 'Line Chart', 'value': 'line'}, {'label': 'Bar Chart', 'value': 'bar'}],
+                        value='line',
+                        inline=True,
+                        className='mb-4'
+                    ),
                     dcc.Dropdown(id='condition-filter',
                                  options=[{"label": condition, 'value': condition} for condition in data['Medical Condition'].unique()],
                                  value=None,
@@ -165,6 +166,67 @@ def update_medical_condition(selected_gender):
         names='Medical Condition',
         title='Medical Condition Distribution Pie Chart'
     )
+    return fig
+
+# insurance provider comparison
+@app.callback(
+    Output('insurance-comparison', 'figure'),
+    Input('gender-filter', 'value')
+)
+def update_insurance(selected_gender):
+    filtered_df = data[data['Gender'] == selected_gender] if selected_gender else data
+    fig = px.bar(
+        filtered_df, x='Insurance Provider', y='Billing Amount', color='Medical Condition',
+        barmode='group', #group all the medical condition
+        title="Insurance Provider Price Comparison",
+        color_discrete_sequence=px.colors.qualitative.Set2
+    ) 
+    return fig 
+
+# billing distribution
+@app.callback(
+    Output('billing-distribution', 'figure'),
+    [Input('gender-filter', 'value'),
+     Input('billing-slider', 'value')]
+)
+def update_billing(selected_gender, slider_value):
+    filtered_df = data[data['Gender'] == selected_gender] if selected_gender else data
+    filtered_df = filtered_df[filtered_df['Billing Amount'] <= slider_value]
+
+    fig = px.histogram(
+        filtered_df,
+        x='Billing Amount', nbins=10,
+        title='Billing Amount Distribution'
+    )
+    return fig
+
+# trends in admission
+@app.callback(
+    Output('admission-trends', 'figure'),
+    [Input('chart-type', 'value'),
+     Input('condition-filter', 'value')]
+)
+def update_admission(chart_type, selected_condition):
+    filtered_df = data[data['Medical Condition'] == selected_condition] if selected_condition else data
+    trend_df = filtered_df.groupby('Year Month').size().reset_index(name='Count')
+
+    trend_df['Year Month'] = trend_df['Year Month'].astype(str)
+
+    if chart_type == 'line':
+        fig = px.line(
+            trend_df,
+            x='Year Month',
+            y='Count',
+            title='Admission Trends over time'
+        )
+    else:
+        fig = px.bar(
+            trend_df,
+            x='Year Month',
+            y='Count',
+            title='Admission Trends'
+        )
+
     return fig
 
 if __name__ == '__main__':
